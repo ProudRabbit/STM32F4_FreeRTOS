@@ -4,44 +4,26 @@
 #include "led.h"
 #include "key.h"
 #include "beep.h"
+#include "exti.h"
+
 
 int main(void)
 {
-	delay_init(168);
-	LED_Init();
-	KEY_Init();
-	uart_init(115200);
-	BEEP_Init();
-	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
+	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//设置系统中断优先级分组2
+	delay_init(168);    //初始化延时函数
+	uart_init(115200); 	//串口初始化 
+	LED_Init();				  //初始化LED端口  
+	BEEP_Init();        //初始化蜂鸣器端口
+	EXTIX_Init();       //初始化外部中断输入 
+	//LED0=0;					    //先点亮红灯
 	
-	u8 len,t;
-	char *str1 ="毛毛是菜鸡";
-	char *str2 ="毛毛不是菜鸡";
 	while(1)
-	{	
-		if((USART_RX_STA & 0x8000))
-		{
-			len = USART_RX_STA&0x3fff;
-			printf("\r\n你发送的命令为:\r\n");
-			
-			for(t=0;t<len;t++)
-			{
-				if(USART_RX_BUF[t]!=(*str1)&&USART_RX_BUF[t]!=(*str2))
-					break;
-				else
-					str1++;
-					str2++;
-				USART_SendData(USART1,USART_RX_BUF[t]);
-				while((USART1->SR&0X40)==0);
-			}
-			BEEP = !BEEP;
-			str1 = "毛毛是菜鸡";
-			str2 = "毛毛不是菜鸡";
-			printf("\r\n");
-			USART_RX_STA =0;
-		}
-		delay_ms(100);
+	{
+		printf("这是一个外部中测试实验\r\n");
+		delay_ms(1000);
 	}
 }
+
+
 
 

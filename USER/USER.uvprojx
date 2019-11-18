@@ -335,7 +335,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F40_41xxx,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CORE;..\FWLIB\inc;..\USER;..\SYSTEM;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\HARDWARE\LED;..\HARDWARE\KEY;..\HARDWARE\BEEP;..\HARDWARE\EXTI</IncludePath>
+              <IncludePath>..\CORE;..\FWLIB\inc;..\USER;..\SYSTEM;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\HARDWARE\LED;..\HARDWARE\KEY;..\HARDWARE\BEEP;..\HARDWARE\EXTI;..\HARDWARE\IWDG</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -628,6 +628,11 @@
               <FileName>exti.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\EXTI\exti.c</FilePath>
+            </File>
+            <File>
+              <FileName>iwdg.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\IWDG\iwdg.c</FilePath>
             </File>
           </Files>
         </Group>

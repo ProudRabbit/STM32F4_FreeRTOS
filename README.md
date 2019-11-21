@@ -20,3 +20,4 @@ FreeRTOS在STM32F4上的学习
 11.21
 	1.完成了ADC3_CH4（PF6）的配置。
 	2.完成了DAC1_CH1（PA4）的配置。
+	3.完成了DMA2_Steam7_CH4的配置。

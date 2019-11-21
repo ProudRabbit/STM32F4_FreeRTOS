@@ -12,25 +12,19 @@
 #include "adc.h"
 #include "dac.h"
 #include "dma.h"
+#include "iic.h"
+#include "24cxx.h"
 
-/*发送数据长度,最好等于 sizeof(TEXT_TO_SEND)+2 的整数倍.*/
-#define SEND_BUF_SIZE 8200
-u8 SendBuff[SEND_BUF_SIZE]; //发送数据缓冲区
-const u8 TEXT_TO_SEND[]={"ALIENTEK Explorer STM32F4 DMA 串口实验"};
+const u8 TEXT_Buffer[]={"Explorer STM32F4 IIC TEST"};
+#define SIZE sizeof(TEXT_Buffer)
 
 
 int main(void)
 {
-	/*
-	u16 adcx,t;
-	float temp;
+	
 	u8 key;
-	u16 dacval=0;
-	*/
-
-	u16 i;
-	u8 t=0,j,mask = 0;
-	float pro=0;//进度
+	u16 i=0;
+	u8 datatemp[SIZE];
 
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//设置系统中断优先级分组2
 	delay_init(168);    //初始化延时函数
@@ -48,50 +42,32 @@ int main(void)
 	//Dac1_Init();
 
 	/*DMA2,STEAM7,CH4,外设为串口 1,存储器为 SendBuff,长度为:SEND_BUF_SIZE.*/
-	MYDMA_Config(DMA2_Stream7, DMA_Channel_4, (u32)&USART1->DR, (u32)SendBuff,SEND_BUF_SIZE);	//配置DMA
+	//MYDMA_Config(DMA2_Stream7, DMA_Channel_4, (u32)&USART1->DR, (u32)SendBuff,SEND_BUF_SIZE);	//配置DMA
 
-	j=sizeof(TEXT_TO_SEND);
-	for(i=0;i<SEND_BUF_SIZE;i++)//填充 ASCII 字符集数据
+	AT24CXX_Init(); //IIC 初始化
+	
+	while(AT24CXX_Check())//检测不到 24c02
 	{
-		if(t>=j)//加入换行符
-		{
-			if(mask)
-			{
-				SendBuff[i]=0x0a;t=0;
-			}
-			else
-			{
-				SendBuff[i]=0x0d;mask++;
-			}
-		}
-		else//复制 TEXT_TO_SEND 语句
-		{
-			mask=0;
-			SendBuff[i]=TEXT_TO_SEND[t];t++;
-		}
+		printf("24C02 Check Failed!Please Check!\r\n");
+		LED0=!LED0;//DS0 闪烁
 	}
-	i = 0;
+	printf("24C02 Ready!\r\n");
+
 	while(1)
 	{
-		t=KEY_Scan(0);
-		if(t==KEY0_PRES) //KEY0 按下
+		key=KEY_Scan(0);
+		if(key==KEY1_PRES)//KEY1 按下,写入 24C02
 		{
-			printf("\r\nDMA DATA:\r\n");
-
-			USART_DMACmd(USART1,USART_DMAReq_Tx,ENABLE); //使能串口 1 的 DMA 发送
-			MYDMA_Enable(DMA2_Stream7,SEND_BUF_SIZE); //开始一次 DMA 传输！
-			while(1)
-			{
-				if(DMA_GetFlagStatus(DMA2_Stream7,DMA_FLAG_TCIF7)!=RESET)//等待 DMA2_Steam7 传输完成
-				{
-					DMA_ClearFlag(DMA2_Stream7,DMA_FLAG_TCIF7);//清传输完成标志
-					break;
-				}
-				pro=DMA_GetCurrDataCounter(DMA2_Stream7);//得到当前剩余数据数
-				pro=1-pro/SEND_BUF_SIZE;//得到百分比
-				pro*=100; //扩大 100 倍
-			}
-			//printf("当前剩余的数据量:%f%%.\r\n",pro);
+		
+			printf("Start Write 24C02....\r\n");
+			AT24CXX_Write(0,(u8*)TEXT_Buffer,SIZE);
+			printf("24C02 Write Finished!\r\n");//提示传送完成
+		}
+		if(key==KEY0_PRES)//KEY0 按下,读取字符串并显示
+		{
+			printf("Start Read 24C02.... \r\n");
+			AT24CXX_Read(0,datatemp,SIZE);
+			printf("The Data Readed Is: %s.\r\n",datatemp);//提示传送完成
 		}
 		i++;
 		delay_ms(10);
@@ -102,5 +78,7 @@ int main(void)
 		}
 	}
 }
+
+
 
 

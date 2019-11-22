@@ -14,17 +14,21 @@
 #include "dma.h"
 #include "iic.h"
 #include "24cxx.h"
-
-const u8 TEXT_Buffer[]={"Explorer STM32F4 IIC TEST"};
+#include "w25qxx.h"
+//要写入到 W25Q128 的字符串数组
+const u8 TEXT_Buffer[]={"Explorer STM32F4 SPI TEST"};
 #define SIZE sizeof(TEXT_Buffer)
+
 
 
 int main(void)
 {
 	
-	u8 key;
+	
+	u8 key, datatemp[SIZE];
 	u16 i=0;
-	u8 datatemp[SIZE];
+	u32 FLASH_SIZE;
+
 
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//设置系统中断优先级分组2
 	delay_init(168);    //初始化延时函数
@@ -43,39 +47,42 @@ int main(void)
 
 	/*DMA2,STEAM7,CH4,外设为串口 1,存储器为 SendBuff,长度为:SEND_BUF_SIZE.*/
 	//MYDMA_Config(DMA2_Stream7, DMA_Channel_4, (u32)&USART1->DR, (u32)SendBuff,SEND_BUF_SIZE);	//配置DMA
-
-	AT24CXX_Init(); //IIC 初始化
+	//AT24CXX_Init(); //IIC 初始化
+	W25QXX_Init(); //W25QXX 初始化
 	
-	while(AT24CXX_Check())//检测不到 24c02
+	while(W25QXX_ReadID()!=W25Q128)//检测不到 W25Q128
 	{
-		printf("24C02 Check Failed!Please Check!\r\n");
+		printf("W25Q128 Check Failed!Please Check!\r\n");
 		LED0=!LED0;//DS0 闪烁
+		delay_ms(200);
 	}
-	printf("24C02 Ready!\r\n");
-
+	printf("W25Q128 Ready!\r\n");
+	
 	while(1)
 	{
-		key=KEY_Scan(0);
-		if(key==KEY1_PRES)//KEY1 按下,写入 24C02
-		{
-		
-			printf("Start Write 24C02....\r\n");
-			AT24CXX_Write(0,(u8*)TEXT_Buffer,SIZE);
-			printf("24C02 Write Finished!\r\n");//提示传送完成
-		}
-		if(key==KEY0_PRES)//KEY0 按下,读取字符串并显示
-		{
-			printf("Start Read 24C02.... \r\n");
-			AT24CXX_Read(0,datatemp,SIZE);
-			printf("The Data Readed Is: %s.\r\n",datatemp);//提示传送完成
-		}
-		i++;
-		delay_ms(10);
-		if(i==20)
-		{
-			LED0=!LED0;//提示系统正在运行
-			i=0;
-		}
+			key=KEY_Scan(0);
+			if(key==KEY1_PRES)//KEY1 按下,写入 W25Q128
+			{
+			
+				printf("Start Write W25Q128....\r\n");
+				W25QXX_Write((u8*)TEXT_Buffer,FLASH_SIZE-100,SIZE);
+				//从倒数第 100 个地址处开始,写入 SIZE 长度的数据
+				printf("W25Q128 Write Finished!\r\n");//提示完成
+			}
+			if(key==KEY0_PRES)//KEY0 按下,读取字符串并显示
+			{
+				printf("Start Read W25Q128.... \r\n");
+				W25QXX_Read(datatemp,FLASH_SIZE-100,SIZE);
+				//从倒数第 100 个地址处开始,读出 SIZE 个字节
+				printf("The Data Readed Is: %s.\r\n",datatemp);//提示传送完成
+			}
+			i++;
+			delay_ms(10);
+			if(i==20)
+			{
+				LED0=!LED0;//提示系统正在运行
+				i=0;
+			}
 	}
 }
 

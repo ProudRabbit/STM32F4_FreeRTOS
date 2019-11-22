@@ -335,7 +335,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F40_41xxx,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CORE;..\FWLIB\inc;..\USER;..\SYSTEM;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\HARDWARE\LED;..\HARDWARE\KEY;..\HARDWARE\BEEP;..\HARDWARE\EXTI;..\HARDWARE\IWDG;..\HARDWARE\TIMER;..\HARDWARE\PWM;..\HARDWARE\TPAD;..\HARDWARE\ADC;..\HARDWARE\DAC;..\HARDWARE\DMA;..\HARDWARE\24CXX;..\HARDWARE\IIC</IncludePath>
+              <IncludePath>..\CORE;..\FWLIB\inc;..\USER;..\SYSTEM;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\HARDWARE\LED;..\HARDWARE\KEY;..\HARDWARE\BEEP;..\HARDWARE\EXTI;..\HARDWARE\IWDG;..\HARDWARE\TIMER;..\HARDWARE\PWM;..\HARDWARE\TPAD;..\HARDWARE\ADC;..\HARDWARE\DAC;..\HARDWARE\DMA;..\HARDWARE\24CXX;..\HARDWARE\IIC;..\HARDWARE\W25QXX;..\HARDWARE\SPI</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -673,6 +673,16 @@
               <FileName>iic.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\IIC\iic.c</FilePath>
+            </File>
+            <File>
+              <FileName>spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\SPI\spi.c</FilePath>
+            </File>
+            <File>
+              <FileName>w25qxx.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\W25QXX\w25qxx.c</FilePath>
             </File>
           </Files>
         </Group>

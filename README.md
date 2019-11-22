@@ -25,3 +25,4 @@ FreeRTOS在STM32F4上的学习
 
 11.22
 	1.完成了SPI1的配置。
+	2.完成了FreeRTOS系统的移植。

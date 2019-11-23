@@ -13,7 +13,7 @@
 #define KEY0_PRES 1		
 #define KEY1_PRES 2
 #define KEY2_PRES 3
-#define WKUP_RPES 4
+#define WKUP_PRES 4
 
 
 void KEY_Init(void);	//≥ı ºªØIO

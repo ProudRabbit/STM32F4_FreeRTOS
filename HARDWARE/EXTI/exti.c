@@ -3,7 +3,7 @@
 #include "delay.h"
 #include "led.h"
 #include "beep.h"
-
+#include "usart.h"
 
 void EXTIX_Init(void)
 {
@@ -35,28 +35,28 @@ void EXTIX_Init(void)
 	EXTI_Init(&EXTI_InitStructure);//配置
 	
 	NVIC_InitStructure.NVIC_IRQChannel	= EXTI0_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x00;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority	= 0x02;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x04;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority	= 0x00;
 	NVIC_InitStructure.NVIC_IRQChannelCmd	= ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 	
 	NVIC_InitStructure.NVIC_IRQChannel = EXTI2_IRQn;//外部中断2
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x03;//抢占优先级3
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x02;//子优先级2
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x04;//抢占优先级3
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;//子优先级2
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;//使能外部中断通道
 	NVIC_Init(&NVIC_InitStructure);//配置
 	
 	
 	NVIC_InitStructure.NVIC_IRQChannel = EXTI3_IRQn;//外部中断3
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x02;//抢占优先级2
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x02;//子优先级2
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x04;//抢占优先级2
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;//子优先级2
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;//使能外部中断通道
 	NVIC_Init(&NVIC_InitStructure);//配置
 	
 	
 	NVIC_InitStructure.NVIC_IRQChannel = EXTI4_IRQn;//外部中断4
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;//抢占优先级1
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x02;//子优先级2
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x04;//抢占优先级1
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;//子优先级2
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;//使能外部中断通道
 	NVIC_Init(&NVIC_InitStructure);//配置
 	
@@ -67,7 +67,7 @@ void EXTI0_IRQHandler(void)
 {
 	if(EXTI_GetFlagStatus(EXTI_Line0)!=RESET)
 	{
-		delay_ms(10);
+		delay_ms(10);	//消抖	注意使用delay_xms();delay_ms()会引起任务调度导致系统奔溃；
 		if(WK_UP==1)
 		{
 			BEEP = !BEEP;
@@ -80,7 +80,8 @@ void EXTI2_IRQHandler(void)
 {
 	if(EXTI_GetFlagStatus(EXTI_Line2)!=RESET)
 	{
-		delay_ms(10);	//消抖
+		printf("外部中断2输出。。。。。\r\n");
+		delay_xms(10);	//消抖	注意使用delay_xms();delay_ms()会引起任务调度导致系统奔溃；
 		if(KEY2==0)	  
 		{				 
 			LED1=!LED1; 
@@ -93,7 +94,7 @@ void EXTI3_IRQHandler(void)
 {
 	if(EXTI_GetFlagStatus(EXTI_Line3)!=RESET)
 	{
-		delay_ms(10);
+		delay_ms(10);	//消抖	注意使用delay_xms();delay_ms()会引起任务调度导致系统奔溃；
 		if(KEY1==0)
 		{
 			LED0 = !LED0;
@@ -106,7 +107,7 @@ void EXTI4_IRQHandler(void)
 {
 	if(EXTI_GetFlagStatus(EXTI_Line4)!=RESET)
 	{
-		delay_ms(10);
+		delay_ms(10);	//消抖	注意使用delay_xms();delay_ms()会引起任务调度导致系统奔溃；
 		if(KEY0==0)
 		{
 			LED0 = !LED0;

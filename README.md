@@ -5,7 +5,8 @@ FreeRTOS在STM32F4上的学习
 	1.新建了一个include.h文件来存放头文件。
 	2.测试了任务的创建、挂起、恢复、删除。
 	3.了解了列表项相关的配置。同时修护了#define WKUP_PRES错误。
-
+	4.了解了FreeRTOS的中断管理。delay_ms()会引起任务调度，delay_xms()不会。
+	
 11.22
 	1.完成了SPI1的配置。
 	2.完成了FreeRTOS系统的移植。

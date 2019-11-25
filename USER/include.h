@@ -21,6 +21,8 @@
 #include "iic.h"
 #include "24cxx.h"
 #include "w25qxx.h"
+#include "task.h"
+#include "queue.h"
 
 
 

@@ -1,9 +1,12 @@
 #include "sys.h"
-#include "usart.h"	
+#include "usart.h"
+#include "string.h"
 ////////////////////////////////////////////////////////////////////////////////// 	 
 //如果使用ucos,则包括下面的头文件即可.
 #if SYSTEM_SUPPORT_OS
-#include "FreeRTOS.h"					//os 使用	  
+#include "FreeRTOS.h"					//os 使用	
+#include "task.h"
+#include "queue.h"
 #endif
 //////////////////////////////////////////////////////////////////////////////////	 
 //本程序只供学习使用，未经作者许可，不得用于其它任何用途
@@ -108,8 +111,8 @@ void uart_init(u32 bound){
 
 	//Usart1 NVIC 配置
 	NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;//串口1中断通道
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority=3;//抢占优先级3
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority =3;		//子优先级3
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority=0x06;//抢占优先级3
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority =0x00;		//子优先级3
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;			//IRQ通道使能
 	NVIC_Init(&NVIC_InitStructure);	//根据指定的参数初始化VIC寄存器、
 
@@ -117,10 +120,12 @@ void uart_init(u32 bound){
 	
 }
 
+extern QueueHandle_t Message_Queue;	//信息队列句柄
 
 void USART1_IRQHandler(void)                	//串口1中断服务程序
 {
 	u8 Res;
+	BaseType_t xHigherPriorityTaskWoken;
 /*
 #if SYSTEM_SUPPORT_OS 		//如果SYSTEM_SUPPORT_OS为真，则需要支持OS.
 	OSIntEnter();    
@@ -148,7 +153,16 @@ void USART1_IRQHandler(void)                	//串口1中断服务程序
 				}		 
 			}
 		}   		 
-  } 
+  	} 
+	
+	if((USART_RX_STA&0x8000)&&Message_Queue!=NULL)
+	{
+		xQueueSendFromISR(Message_Queue, USART_RX_BUF, &xHigherPriorityTaskWoken);
+		//USART_RX_STA = 0;
+		memset(USART_RX_BUF,0,USART_REC_LEN);//清除数据接收缓冲区USART_RX_BUF,用于下一次数据接收
+		portYIELD_FROM_ISR(xHigherPriorityTaskWoken);//如果需要的话进行一次任务切换
+	}
+	
 } 
 #endif	
 

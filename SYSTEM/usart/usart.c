@@ -120,12 +120,10 @@ void uart_init(u32 bound){
 	
 }
 
-extern QueueHandle_t Message_Queue;	//信息队列句柄
 
 void USART1_IRQHandler(void)                	//串口1中断服务程序
 {
 	u8 Res;
-	BaseType_t xHigherPriorityTaskWoken;
 /*
 #if SYSTEM_SUPPORT_OS 		//如果SYSTEM_SUPPORT_OS为真，则需要支持OS.
 	OSIntEnter();    
@@ -154,15 +152,6 @@ void USART1_IRQHandler(void)                	//串口1中断服务程序
 			}
 		}   		 
   	} 
-	
-	if((USART_RX_STA&0x8000)&&Message_Queue!=NULL)
-	{
-		xQueueSendFromISR(Message_Queue, USART_RX_BUF, &xHigherPriorityTaskWoken);
-		//USART_RX_STA = 0;
-		memset(USART_RX_BUF,0,USART_REC_LEN);//清除数据接收缓冲区USART_RX_BUF,用于下一次数据接收
-		portYIELD_FROM_ISR(xHigherPriorityTaskWoken);//如果需要的话进行一次任务切换
-	}
-	
 } 
 #endif	
 

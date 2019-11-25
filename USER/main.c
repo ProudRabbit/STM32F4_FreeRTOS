@@ -7,27 +7,19 @@ void start_task(void* pvParameters);		//任务函数
 TaskHandle_t StartTask_Handler;				//定义任务句柄
 
 
-void KEY_task(void* pvParameters);			//任务函数
-#define KEY_STK_SIZE 50					//定义任务堆栈大小
-#define KEY_TASK_PRIO 2 					//定义任务优先级
-TaskHandle_t KEY_Task_Handler;				//定义任务句柄
-
-void USART_task(void* pvParameters);			//任务函数
-#define USART_STK_SIZE 200					//定义任务堆栈大小
-#define USART_TASK_PRIO 3 					//定义任务优先级
-TaskHandle_t USART_Task_Handler;				//定义任务句柄
+void Timer_task(void* pvParameters);			//任务函数
+#define TIMER_STK_SIZE 50					//定义任务堆栈大小
+#define TIMER_TASK_PRIO 2 					//定义任务优先级
+TaskHandle_t TIMER_Task_Handler;				//定义任务句柄
 
 
-void config_task(void* pvParameters);			//任务函数
-#define CONFIG_STK_SIZE 50					//定义任务堆栈大小
-#define CONFEG_TASK_PRIO 4 					//定义任务优先级
-TaskHandle_t CONFIG_Task_Handler;				//定义任务句柄
 
-//按键消息队列的数量
-#define KEYMSG_Q_NUM 1		//按键消息队列的数量
-#define MESSAGE_Q_NUM 4		//发送数据的消息队列的数量
-QueueHandle_t Key_Queue;	//按键值消息队列句柄
-QueueHandle_t Message_Queue;	//信息队列句柄
+TimerHandle_t OneShotTimer_Handle;	//单次定时器句柄
+TimerHandle_t AutoReloadTimer_Handle;	//周期定时器句柄
+
+void AutoReloadCallback(TimerHandle_t xTimer); 	//周期定时器回调函数
+void OneShotCallback(TimerHandle_t xTimer);		//单次定时器回调函数
+
 
 
 
@@ -54,103 +46,85 @@ void start_task(void * pvParameters)
 {
 	taskENTER_CRITICAL();
 
-	Key_Queue = xQueueCreate(KEYMSG_Q_NUM, sizeof(u8));
-	Message_Queue = xQueueCreate(MESSAGE_Q_NUM, USART_REC_LEN);
+	AutoReloadTimer_Handle = xTimerCreate((const char *				) "AutoReloadTimer",
+										  (TickType_t				) 1000,
+										  (UBaseType_t				) pdTRUE,
+										  (void * 					) 1,
+ 										  (TimerCallbackFunction_t	) AutoReloadCallback );
 	
-	//创建KEY任务
-	xTaskCreate((TaskFunction_t	)KEY_task,				//任务函数
-				(char*			)"KEY_task",			//任务名称
-				(uint16_t		)KEY_STK_SIZE,			//任务堆栈大小
+	OneShotTimer_Handle = xTimerCreate((const char *			) "OneShotTimer",
+									   (TickType_t				) 2000,
+									   (UBaseType_t				) pdFALSE,
+									   (void * 					) 2,
+ 									   (TimerCallbackFunction_t	) OneShotCallback );
+	
+	//创建TIMER任务
+	xTaskCreate((TaskFunction_t	)Timer_task,				//任务函数
+				(char*			)"Timer_task",			//任务名称
+				(uint16_t		)TIMER_STK_SIZE,			//任务堆栈大小
 				(void*			)NULL, 					//传递给任务的参数
-				(UBaseType_t	)KEY_TASK_PRIO,			//任务的优先级
-				(TaskHandle_t*	)&KEY_Task_Handler);	//任务句柄
+				(UBaseType_t	)TIMER_TASK_PRIO,			//任务的优先级
+				(TaskHandle_t*	)&TIMER_Task_Handler);	//任务句柄
 
-					//创建开始任务
-	xTaskCreate((TaskFunction_t	)USART_task,			//任务函数
-				(char*			)"USART_task",			//任务名称
-				(uint16_t		)USART_STK_SIZE,		//任务堆栈大小
-				(void*			)NULL, 					//传递给任务的参数
-				(UBaseType_t	)USART_TASK_PRIO,		//任务的优先级
-				(TaskHandle_t*	)&USART_Task_Handler);	//任务句柄
-					//创建开始任务
-	xTaskCreate((TaskFunction_t	)config_task,			//任务函数
-				(char*			)"CONFEG_TASK_PRIO",	//任务名称
-				(uint16_t		)CONFIG_STK_SIZE,		//任务堆栈大小
-				(void*			)NULL, 					//传递给任务的参数
-				(UBaseType_t	)CONFEG_TASK_PRIO,		//任务的优先级
-				(TaskHandle_t*	)&CONFIG_Task_Handler);	//任务句柄
-							
+
 	vTaskDelete(StartTask_Handler);
 	taskEXIT_CRITICAL();
 }
 
-void KEY_task(void* pvParameters)
+void Timer_task(void* pvParameters)
 {
-	u8 key;
-    BaseType_t err;
-	while(1)
+	u8 key,num;
+	while (1)
 	{
-		key = KEY_Scan(1);
-		if(Key_Queue!=NULL && key)		//消息队列Key_Queue创建成功,并且按键被按下
+		if ((AutoReloadTimer_Handle!=NULL)&&(OneShotTimer_Handle!=NULL))
 		{
-			err = xQueueSend(Key_Queue, &key, 10);	
-			if (err == errQUEUE_FULL)
+			key = KEY_Scan(0);
+			switch (key)
 			{
-				printf("队列Key_Queue已满，数据发送失败!\r\n");
-			}
+				case WKUP_PRES:     //当key_up按下的话打开周期定时器
+					xTimerStart(AutoReloadTimer_Handle,0);	//开启周期定时器
+					printf("开启定时器1\r\n");
+					break;
+				case KEY0_PRES:		//当key0按下的话打开单次定时器
+					xTimerStart(OneShotTimer_Handle,0);		//开启单次定时器
+					printf("开启定时器2\r\n");
+					break;
+				case KEY1_PRES:		//当key1按下话就关闭定时器
+					xTimerStop(AutoReloadTimer_Handle,0); 	//关闭周期定时器
+					xTimerStop(OneShotTimer_Handle,0); 		//关闭单次定时器
+					printf("关闭定时器1和2\r\n");
+					break;	
+			}	
 		}
-		vTaskDelay(20);
-	}
-}
-
-
-void USART_task(void* pvParameters)
-{
-	u8 buf[USART_REC_LEN],t;
-	while(1)
-	{
-		if(Message_Queue!= NULL)
+		num++;
+		if (num == 50)
 		{
-			if(xQueueReceive(Message_Queue,buf,portMAX_DELAY)&&(USART_RX_STA&0x8000))		//请求消息Message_Queue
-			{
-
-				USART_RX_STA=0;
-				printf("你发送的信息为：\r\n");
-				for(t=0;t<USART_REC_LEN;t++)
-				{
-					USART_SendData(USART1, buf[t]);         //向串口1发送数据
-					while(USART_GetFlagStatus(USART1,USART_FLAG_TC)!=SET);//等待发送结束
-				}
-				printf("\r\n");
-			}
-		}
-		delay_xms(20);
-	}
-}
-
-
-void config_task(void* pvParameters)
-{
-	u8 key;
-	while(1)
-	{
-		if(Key_Queue != NULL)
-		{
-			if(xQueueReceive(Key_Queue,&key,portMAX_DELAY))	//请求消息Key_Queue
-			{
-				switch (key)
-					{
-						case WKUP_PRES:
-							LED0 = !LED0;
-							break;
-						case KEY2_PRES:
-							LED1 = !LED1;
-							break;
-					}
-			}
+			num = 0;
+			LED0=!LED0;
 		}
 		vTaskDelay(10);
 	}
 }
+
+//周期定时器的回调函数
+void AutoReloadCallback(TimerHandle_t xTimer)
+{
+	static u8 tmr1_num=0;
+	tmr1_num++;									//周期定时器执行次数加1
+	printf("周期定时器1执行次数：%d\r\n",tmr1_num);
+}
+
+//单次定时器的回调函数
+void OneShotCallback(TimerHandle_t xTimer)
+{
+	static u8 tmr2_num = 0;
+	tmr2_num++;		//周期定时器执行次数加1
+	printf("单次定时器2执行次数：%d\r\n",tmr2_num);
+	LED1=!LED1;
+    printf("定时器2运行结束\r\n");
+}
+
+
+
 
 
